@@ -125,7 +125,7 @@ public class Inlining {
                 PhiInst = new IRPhi(++InstCounter.InstCounter, callinst.getDest(), callinst.getType(),
                         new ArrayList<>(), new ArrayList<>());
             }
-            var inlineBlocks = inline(targetfunc, callinst, block.getLoopDepth());
+            var inlineBlocks = inline(targetfunc, func, callinst, block.getLoopDepth());
             var succBlock = new IRBlock(new IRLabel("inline." + InlineCount, block.getLoopDepth()),
                     block.getLoopDepth());
             label2block.put(new Pair<IRFuncDef, String>(func, succBlock.getLabelName().getLabel()), succBlock);
@@ -176,7 +176,7 @@ public class Inlining {
         }
     }
 
-    public ArrayList<IRBlock> inline(IRFuncDef func, IRCall callinst, int basedepth) {
+    public ArrayList<IRBlock> inline(IRFuncDef func,IRFuncDef origin, IRCall callinst, int basedepth) {
         param2name = new HashMap<>();
         var inlineBlocks = new ArrayList<IRBlock>();
         for (int i = 0; i < func.getParams().size(); ++i) {
@@ -185,7 +185,9 @@ public class Inlining {
         for (var block : func.getBlockstmts()) {
             var newBlock = new IRBlock(new IRLabel(block.getLabelName().getLabel() + ".inline." + InlineCount,
                     block.getLoopDepth() + basedepth), block.getLoopDepth() + basedepth);
-            label2block.put(new Pair<IRFuncDef, String>(func, newBlock.getLabelName().getLabel()), newBlock);
+            // System.out.println(callinst.toString());
+            // System.out.println(func.getName() + " inline " + newBlock.getLabelName().getLabel());
+            label2block.put(new Pair<IRFuncDef, String>(origin, newBlock.getLabelName().getLabel()), newBlock);
             curBlock = newBlock.getLabelName();
             for (var pair : block.getPhiList().entrySet()) {
                 newBlock.getPhiList().put((IRVariable) replaceEntity(pair.getKey()),

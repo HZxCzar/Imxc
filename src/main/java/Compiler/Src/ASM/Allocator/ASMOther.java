@@ -60,7 +60,7 @@ public class ASMOther {
             {
                 if(ret instanceof ASMBeq)
                 {
-                    if(computedist(func,name2block.get(block.jump.getLabel()),i)<1000)
+                    if(computedist(func,name2block.get(block.jump.getLabel()),i)<800)
                     {
                         if(block.jlabel==null)
                         {

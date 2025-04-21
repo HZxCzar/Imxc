@@ -11,8 +11,9 @@ public class IROptimize {
         new LoopOpt().visit(root);
         new Tail().visit(root);
         new Inlining().visit(root);
-        new ADCE().visit(root);
+        // new ADCE().visit(root);
         new SCCP().visit(root);
+        new ADCE().visit(root);
         new CSE().visit(root);
         new RovB().visit(root);
         new LiveAnalysis().visit(root);
