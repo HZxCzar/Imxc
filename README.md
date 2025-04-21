@@ -1,53 +1,12 @@
 # Imxc
 ~~A incremental version of mxc~~
-根据搜索结果，“IMXC”可能与以下两个项目相关，但需注意区分：
+IMXC – Could stand for:
 
-一、MXC极域（区块链物联网项目）1
-由胡莘创立的区块链物联网项目，总部位于德国柏林，专注于智慧城市与物联网技术。核心信息如下：
+"Internet Message Exchange Client" (a hypothetical messaging protocol).
+"In-Memory XCache" (a caching system).
+A cryptocurrency or token (though I couldn't find a known one by this name).
+Typo for "IMX" – If you meant IMX, it could refer to:
 
-项目定位
-MXC极域是一个开放的智慧城市平台，由全球超级节点（德国、韩国、中国）组成，目标是将物联网设备与区块链技术结合，实现跨链数据互通。其开发的“波卡侧链数据高速公路”是波卡生态中唯一落地的智慧城市项目。
-
-技术特点
-
-跨链技术：利用波卡的跨链机制，支持与阿里云、京东云、以太坊等平台的数据互通。
-
-隐私保护：通过AI处理数据，结合LPWAN（低功耗广域网）技术保护数据隐私，如AI红外摄像头可追踪发热和咳嗽人群（曾用于武汉疫情）1。
-
-去中心化架构：采用DAO（去中心化自治组织）模式，100%通过挖矿产生。
-
-团队与进展
-团队包括Parity开发者等顶尖人才，已与德国铁路合作部署LPWAN网关矿机，覆盖60多个国家的智慧城市应用。
-
-二、Immutable X（IMX，NFT Layer2协议）7
-尽管名称相近，但“IMX”是另一个独立项目，与“IMXC”无直接关联：
-
-项目定位
-以太坊上的NFT Layer2协议，专注于解决以太坊主网的高Gas费和低扩展性问题。
-
-技术特点
-
-使用ZK-Rollup技术，支持每秒9000笔交易，零Gas费。
-
-支持碳中和NFT铸造，并与StarkWare合作开发安全验证机制。
-
-代币用途
-IMX代币用于支付交易费用、质押奖励及社区治理，总供应量20亿枚，流通量约80%。
-
-三、其他可能的混淆项
-IMC架构（汽车领域）
-由ARCFOX联合华为、麦格纳等开发的智能汽车平台，是全球首个商业搭载5G技术的造车架构，用于生产高端电动SUV（如ARCFOX αT）345。
-
-SAIL-IMX7核心板（硬件）
-保定电鱼电子科技的产品，面向智慧医疗领域，与区块链无关2。
-
-总结
-若用户指区块链项目，MXC极域是正确答案，需注意其正确缩写为“MXC”而非“IMXC”（可能为输入错误）。
-
-若涉及NFT扩展协议，则指向Immutable X（IMX）。
-
-其他如IMC架构或IMX7核心板属于不同领域，需结合上下文进一步确认。
-
-建议根据具体应用场景进一步核实项目名称或技术细节。
-
-本回答由 AI 生成，内容仅供参考，请仔细甄别。
+Immutable X (IMX) – A Layer-2 scaling solution for NFTs on Ethereum.
+IMX (In-Memory Execution) – A computing term.
+Personal/Custom Use – Could be a username, code, or internal reference.
