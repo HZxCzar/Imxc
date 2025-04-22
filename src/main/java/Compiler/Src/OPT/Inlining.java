@@ -69,13 +69,13 @@ public class Inlining {
                 run |= visit(func);
             }
         }
-        for (int i = 0; i < root.getFuncs().size(); ++i) {
-            var func = root.getFuncs().get(i);
-            if (Callednum.get(func.getName()) == 0 && !func.getName().equals("main")) {
-                root.getFuncs().remove(i);
-                i--;
-            }
-        }
+        // for (int i = 0; i < root.getFuncs().size(); ++i) {
+        //     var func = root.getFuncs().get(i);
+        //     if (Callednum.get(func.getName()) == 0 && !func.getName().equals("main")) {
+        //         root.getFuncs().remove(i);
+        //         i--;
+        //     }
+        // }
     }
 
     public void calc(IRFuncDef func) {

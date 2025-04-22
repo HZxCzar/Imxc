@@ -87,12 +87,12 @@ public class Compile {
             }
         }
         // Process IR
-        IRRoot CombinedIr = new IRRoot();
+        ASMRoot CombinedAsm = new ASMRoot();
 
         String mainFilePath = null;
         String mainFile = null;
 
-        // 先处理 main.mx
+        // process main.mx
         for (Path filePath : filesToCompile) {
             if (filePath.getFileName().toString().equals("main.mx")) {
                 mainFilePath = filePath.toString();
@@ -100,7 +100,6 @@ public class Compile {
                 break;
             }
         }
-
         if (mainFilePath != null) {
             try {
                 ASTNode astProgram = file2ast.get(mainFilePath);
@@ -112,12 +111,16 @@ public class Compile {
 
                 try {
                     IRNode irProgram = new IRBuilder().visit((ASTRoot) astProgram);
-                    String outputIrFile = "src/test/mx/output_" +
-                            mainFile.replaceAll("\\.mx$", ".ll");
-                    var outputIr = new PrintStream(new FileOutputStream(outputIrFile));
-                    outputIr.println(irProgram);
-                    outputIr.close();
-                    CombinedIr.combine((IRRoot) irProgram);
+                    new IROptimize().visit((IRRoot) irProgram);
+                    ASMNode asmProgram = new InstSelector().visit((IRRoot)irProgram);
+                    new RegAllocator((ASMRoot) asmProgram).Main();
+                    new StackManager().visit((ASMRoot) asmProgram);
+                    String outputIrFile = "src/test/cache/output_" +
+                            mainFile.replaceAll("\\.mx$", ".s");
+                    var outputAsm = new PrintStream(new FileOutputStream(outputIrFile));
+                    outputAsm.println(asmProgram);
+                    outputAsm.close();
+                    CombinedAsm.combine((ASMRoot) asmProgram, true);
 
                 } catch (BaseError e) {
                     System.err.println("Error during IR/ASM generation for " + mainFilePath + ": " +
@@ -141,12 +144,16 @@ public class Compile {
 
                         try {
                             IRNode irProgram = new IRBuilder().visit((ASTRoot) astProgram);
-                            String outputIrFile = "src/test/mx/output_" +
-                                    filePath.getFileName().toString().replaceAll("\\.mx$", ".ll");
+                            new IROptimize().visit((IRRoot) irProgram);
+                            ASMNode asmProgram = new InstSelector().visit((IRRoot)irProgram);
+                            new RegAllocator((ASMRoot) asmProgram).Main();
+                            new StackManager().visit((ASMRoot) asmProgram);
+                            String outputIrFile = "src/test/cache/output_" +
+                                    filePath.getFileName().toString().replaceAll("\\.mx$", ".s");
                             var outputIr = new PrintStream(new FileOutputStream(outputIrFile));
-                            outputIr.println(irProgram);
+                            outputIr.println(asmProgram);
                             outputIr.close();
-                            CombinedIr.combine((IRRoot) irProgram);
+                            CombinedAsm.combine((ASMRoot) asmProgram, false);
 
                         } catch (BaseError e) {
                             System.err.println("Error during IR/ASM generation for " + filePath + ": " +
@@ -160,84 +167,12 @@ public class Compile {
                         e.getMessage());
             }
         }
-
-        // IR optimization and ASM generation
-        try {
-            new IROptimize().visit(CombinedIr);
-            String outputIrFile = "src/test/mx/output_opt.ll";
-            var outputIr = new PrintStream(new FileOutputStream(outputIrFile));
-            outputIr.println(CombinedIr);
-            outputIr.close();
-
-            ASMNode asmProgram2 = new InstSelector().visit(CombinedIr);
-            new RegAllocator((ASMRoot) asmProgram2).Main();
-            new StackManager().visit((ASMRoot) asmProgram2);
-
-            // Write individual .s file for incremental compilation
-            String outputAsmFile = "src/test/mx/output.s";
-            try (PrintStream fileOutputStream = new PrintStream(new FileOutputStream(outputAsmFile))) {
-                fileOutputStream.println(asmProgram2);
-            }
-
-            // Append to the combined assembly
-            combinedAsmBuilder.append(asmProgram2.toString()).append("\n");
-
-        } catch (BaseError e) {
-            System.err.println("Error during IR/ASM generation: " + e.getMessage());
-        }
-        // for (Path filePath : filesToCompile) {
-        // System.out.println("Further processing: " + filePath);
-        // try {
-        // ASTNode astProgram = file2ast.get(filePath.toString());
-        // if (astProgram != null) {
-        // worldCollector.inherit((ASTRoot) astProgram, worldScope);
-        // new SemanticChecker().visit((ASTRoot) astProgram);
-
-        // try {
-        // IRNode irProgram = new IRBuilder().visit((ASTRoot) astProgram);
-        // String outputIrFile = "src/test/mx/output_" +
-        // filePath.getFileName().toString().replaceAll("\\.mx$", ".ll");
-        // var outputIr = new PrintStream(new FileOutputStream(outputIrFile));
-        // outputIr.println(irProgram);
-        // outputIr.close();
-        // new IROptimize().visit((IRRoot) irProgram);
-        // String outputIrOpFile = "src/test/mx/output_opt_" +
-        // filePath.getFileName().toString().replaceAll("\\.mx$", ".ll");
-        // var outputIrOp = new PrintStream(new FileOutputStream(outputIrOpFile));
-        // outputIrOp.println(irProgram);
-        // outputIrOp.close();
-
-        // ASMNode asmProgram2 = new InstSelector().visit((IRRoot) irProgram);
-        // new RegAllocator((ASMRoot) asmProgram2).Main();
-        // new StackManager().visit((ASMRoot) asmProgram2);
-
-        // // Write individual .s file for incremental compilation
-        // String outputAsmFile = "src/test/mx/output_" +
-        // filePath.getFileName().toString().replaceAll("\\.mx$", ".s");
-        // try (PrintStream fileOutputStream = new PrintStream(new
-        // FileOutputStream(outputAsmFile))) {
-        // fileOutputStream.println(asmProgram2);
-        // }
-
-        // // Append to the combined assembly
-        // combinedAsmBuilder.append(asmProgram2.toString()).append("\n");
-
-        // } catch (BaseError e) {
-        // System.err.println("Error during IR/ASM generation for " + filePath + ": " +
-        // e.getMessage());
-        // }
-        // }
-        // } catch (BaseError e) {
-        // System.err.println("IR error in " + filePath + ": " +
-        // e.getMessage());
-        // }
-        // }
-
+        
         // Write the combined assembly code to a single output file
         String singleOutputAsmFile = "test.s";
         try (PrintStream combinedOutputStream = new PrintStream(new FileOutputStream(singleOutputAsmFile))) {
             // combinedOutputStream.println(builtinContent);
-            combinedOutputStream.println(combinedAsmBuilder.toString());
+            combinedOutputStream.println(CombinedAsm.toString());
         }
 
         System.out.println("Compilation finished. Combined output written to " + singleOutputAsmFile);
