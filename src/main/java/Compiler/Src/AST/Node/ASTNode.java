@@ -11,6 +11,10 @@ import lombok.*;
 public class ASTNode {
     protected ASTNode parent;
     protected position pos;
+    protected ASTNode() {
+        this.parent = null;
+        this.pos = new position(0, 0);  // assuming position constructor requires row and column
+    }
 
     public <T> T accept(ASTVisitor<T> visitor) throws BaseError {
         return visitor.visit(this);

@@ -1,7 +1,7 @@
 package Compiler.Src.Increment.SymbolNet;
 
 import Compiler.Src.Util.Info.*;
-import Compiler.Src.AST.Node.ASTRoot;
+import Compiler.Src.AST.Node.DefNode.ASTVarDef;
 import Compiler.Src.Increment.Util.Error.WError;
 import Compiler.Src.Util.*;
 import Compiler.Src.Util.ScopeUtil.*;
@@ -15,6 +15,7 @@ import java.util.HashSet;
 public class WorldScope extends BaseScope implements BasicType {
     private HashMap<String, FuncInfo> funcs;
     private HashMap<String, ClassInfo> classes;
+    private HashSet<ASTVarDef> Gvars;
     private HashMap<String, HashSet<String>> func2use;
     private HashMap<String, HashSet<String>> class2use;
     private HashSet<String> basefunc;
@@ -24,6 +25,7 @@ public class WorldScope extends BaseScope implements BasicType {
         super(null, null);
         this.funcs = new HashMap<String, FuncInfo>();
         this.classes = new HashMap<String, ClassInfo>();
+        this.Gvars = new HashSet<ASTVarDef>();
         this.func2use = new HashMap<String, HashSet<String>>();
         this.class2use = new HashMap<String, HashSet<String>>();
         basefunc = new HashSet<String>();

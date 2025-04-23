@@ -1,10 +1,6 @@
 package Compiler.Src;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import org.antlr.v4.runtime.*;
@@ -17,7 +13,6 @@ import Compiler.Src.ASM.Node.ASMRoot;
 import Compiler.Src.AST.*;
 import Compiler.Src.AST.Node.*;
 
-import Compiler.Src.Codegen.IRCodegen;
 import Compiler.Src.Grammer.*;
 import Compiler.Src.IR.IRBuilder;
 import Compiler.Src.IR.Node.IRNode;
@@ -161,7 +156,6 @@ public class Compile {
                         }
                     }
                 }
-
             } catch (BaseError e) {
                 System.err.println("IR error in " + filePath + ": " +
                         e.getMessage());

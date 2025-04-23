@@ -17,5 +17,7 @@ clean:
 .PHONY: run
 runbas:
 	java -cp bin:$(ANTLR_JAR):$(LOMBOK_JAR) Compiler.Src.Compile_base
-runinc:
+runmut:
 	java -cp bin:$(ANTLR_JAR):$(LOMBOK_JAR) Compiler.Src.Compile
+runinc:
+	java -cp bin:$(ANTLR_JAR):$(LOMBOK_JAR) Compiler.Src.IncrementalCompile

@@ -15,6 +15,11 @@ import Compiler.Src.Util.ScopeUtil.*;
 public class ASTRoot extends ASTNode implements ASTScopedNode {
     public GlobalScope Gscope;
     public ArrayList<ASTDef> DefNodes;
+    public ASTRoot() {
+        super();
+        this.DefNodes = new ArrayList<ASTDef>();
+        this.Gscope = new GlobalScope();
+    }
 
     public void addDef(ASTDef def,int index) {
         this.DefNodes.add(index, def);

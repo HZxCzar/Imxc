@@ -19,6 +19,15 @@ public class IRRoot extends IRNode {
         funcs = new ArrayList<IRFuncDef>();
     }
 
+    public void Dinit() {
+        for (IRFuncDef func : funcs) {
+            if(func.getName().equals("main.global.init")) {
+                funcs.remove(func);
+                break;
+            }
+        }
+    }
+
     public void combine(IRRoot other, Boolean first) {
         for (IRGlobalDef def : other.defs) {
             this.defs.add(def);

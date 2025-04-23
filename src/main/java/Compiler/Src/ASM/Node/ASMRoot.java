@@ -18,6 +18,15 @@ public class ASMRoot extends ASMNode {
         funcs = new ArrayList<ASMFuncDef>();
     }
 
+    public void Dinit() {
+        for (ASMFuncDef func : funcs) {
+            if(func.getName().equals("main.global.init")){
+                funcs.remove(func);
+                break;
+            }
+        }
+    }
+
     public void combine(ASMRoot other, Boolean first) {
         for (ASMVarDef var : other.vars) {
             this.vars.add(var);
