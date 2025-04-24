@@ -76,15 +76,6 @@ public class SemanticChecker extends ScopeControl implements ASTVisitor<SMCError
             if (node.getInitexpr() != null) {
                 msg.append(node.getInitexpr().accept(this));
                 BaseInfo type = node.getInitexpr().getInfo().getDepTypeInfo();
-                // if ((!(type instanceof TypeInfo) || !((TypeInfo)
-                // type).equals(info.getType()))
-                // && !((info.getType().getDepth() > 0 ||
-                // (!info.getType().equals(GlobalScope.intType)
-                // && !info.getType().equals(GlobalScope.boolType)
-                // && !info.getType().equals(GlobalScope.stringType)))
-                // && ((TypeInfo) type).equals(GlobalScope.nullType))
-                // && !(node.getInitexpr() instanceof ASTAtomExpr
-                // && ((ASTAtomExpr) node.getInitexpr()).getConstarray() != null))
                 if (!LRTypeCheck(info.getType(), type) && !(node.getInitexpr() instanceof ASTAtomExpr
                         && ((ASTAtomExpr) node.getInitexpr()).getConstarray() != null)) {
                     throw new SMCError("Type Mismatch\n");

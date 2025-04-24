@@ -1,11 +1,15 @@
 package Compiler.Src.AST.Node.ExprNode.ExprUnitNode;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.ArrayList;
 
 import Compiler.Src.AST.ASTVisitor;
 import Compiler.Src.AST.Node.ExprNode.ASTExpr;
 import Compiler.Src.IR.Entity.*;
 import Compiler.Src.Util.Error.*;
+import Compiler.Src.Util.Info.ExprInfo;
 
 @lombok.experimental.SuperBuilder
 @lombok.Getter
@@ -15,37 +19,60 @@ public class ASTConstarray extends ASTExpr {
     private ArrayList<ASTExpr> expr;
     private IRVariable dest;
 
+    public ASTConstarray() {
+        super();
+    }
+
     @Override
     public <T> T accept(ASTVisitor<T> visitor) throws BaseError {
         return visitor.visit(this);
     }
 
-    // public ArrayList<IREntity> collectArgs(ArrayList<IRStrDef> strDefs) {
-    //     var args = new ArrayList<IREntity>();
-    //     for (var unit : expr) {
-    //         if (!(unit instanceof ASTAtomExpr)) {
-    //             throw new IRError("Constarray must be initialized with constant values");
-    //         }
-    //         if (((ASTAtomExpr) unit).getConstarray() == null) {
-    //             if (((ASTAtomExpr) unit).getAtomType() == ASTAtomExpr.Type.INT) {
-    //                 args.add(new IRLiteral(GlobalScope.irIntType, ((ASTAtomExpr) unit).getValue()));
-    //             } else if (((ASTAtomExpr) unit).getAtomType() == ASTAtomExpr.Type.BOOL) {
-    //                 args.add(new IRLiteral(GlobalScope.irBoolType, ((ASTAtomExpr) unit).getValue()));
-    //             } else if (((ASTAtomExpr) unit).getAtomType() == ASTAtomExpr.Type.STRING) {
-    //                 var dest = new IRVariable(GlobalScope.irPtrType, "@str." + (++IRCounter.strCount));
-    //                 var str = new IRStrDef(dest, ((ASTAtomExpr) unit).getValue());
-    //                 strDefs.add(str);
-    //                 args.add(dest);
-    //             } else {
-    //                 throw new IRError("Constarray must be initialized with constant values");
-    //             }
-    //         }
-    //         else{
-    //             args.add(new IREntity(GlobalScope.irVoidType,"{"));
-    //             args.addAll(((ASTAtomExpr) unit).getConstarray().collectArgs(strDefs));
-    //             args.add(new IREntity(GlobalScope.irVoidType,"}"));
-    //         }
-    //     }
-    //     return args;
-    // }
+    /**
+     * Write out all of the fields in a specific order.
+     */
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        super.writeExternal(out);
+        // primitive fields
+        out.writeInt(maze);
+        out.writeInt(dep);
+
+        // write the list: first its size, then each element
+        if (expr != null) {
+            out.writeInt(expr.size());
+            for (ASTExpr e : expr) {
+                out.writeObject(e);
+            }
+        } else {
+            out.writeInt(0);
+        }
+
+        // write the dest variable
+        out.writeObject(dest);
+    }
+
+    /**
+     * Read them back in the exact same order.
+     */
+    @Override
+    public void readExternal(ObjectInput in)
+            throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+        // primitives
+        maze = in.readInt();
+        dep = in.readInt();
+
+        // read list
+        int n = in.readInt();
+        expr = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            @SuppressWarnings("unchecked")
+            ASTExpr e = (ASTExpr) in.readObject();
+            expr.add(e);
+        }
+
+        // read dest
+        dest = (IRVariable) in.readObject();
+    }
 }

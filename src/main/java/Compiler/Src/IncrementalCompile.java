@@ -21,10 +21,8 @@ import Compiler.Src.Semantic.*;
 import Compiler.Src.Util.Error.*;
 import Compiler.Src.Util.MxErrorListener;
 import java.nio.file.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.io.*;
-import java.nio.file.*;
 import java.util.*;
 
 public class IncrementalCompile {
@@ -66,16 +64,39 @@ public class IncrementalCompile {
             st.filter(p -> p.toString().endsWith(".mx"))
                     .forEach(mxFiles::add);
         }
-        Boolean incremental = false;
+        Boolean incremental = true;
         List<Path> toRecompile = new ArrayList<>();
+        List<Path> toSkip = new ArrayList<>();
         for (Path mx : mxFiles) {
             long now = Files.getLastModifiedTime(mx).toMillis();
             long old = Long.parseLong(cache.getProperty(mx.toString(), "0"));
             if (now != old | !incremental) {
                 toRecompile.add(mx);
                 cache.setProperty(mx.toString(), String.valueOf(now));
+            } else {
+                toSkip.add(mx);
             }
         }
+
+        String path = "build/worldscope.txt";
+
+        // 3. 从文件恢复
+        try (ObjectInputStream ois = new ObjectInputStream(
+                new BufferedInputStream(
+                        new FileInputStream(path)))) {
+            worldScope = (WorldScope) ois.readObject();
+            // 反序列化时会先 new WorldScope()（无参构造器），
+            // 再调用 loaded.readExternal(...)
+            System.out.println("已从文件恢复 WorldScope,包含 funcs="
+                    + worldScope.getFuncs().size()
+                    + " classes=" + worldScope.getClasses().size()
+                    + " Vars=" + worldScope.getVars().size()
+                    + " Gvars=" + worldScope.getGvars().size());
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        worldScope.filter(toRecompile, toSkip);
 
         for (Path filePath : toRecompile) {
             System.out.println("Compiling: " + filePath);
@@ -93,29 +114,33 @@ public class IncrementalCompile {
                 file2ast.put(filePath.toString(), astProgram);
                 worldCollector.scan((ASTRoot) astProgram, worldScope, filePath.toString());
             } catch (BaseError e) {
-                System.err.println("Semantic error in " + filePath + ": " + e.getMessage());
+                System.err.println("worldCollector error in " + filePath + ": " + e.getMessage());
             }
         }
 
         // process globalvar
-        ASTRoot globalVarProgram = new ASTRoot();
-        worldCollector.inherit((ASTRoot) globalVarProgram, worldScope, true);
-        worldCollector.GlobalVarCollectRelease((ASTRoot) globalVarProgram, worldScope);
-        new SemanticChecker().visit((ASTRoot) globalVarProgram);
         try {
-            IRNode irProgram = new IRBuilder().visit((ASTRoot) globalVarProgram);
-            new IROptimize().visit((IRRoot) irProgram);
-            ASMNode asmProgram = new InstSelector().visit((IRRoot) irProgram);
-            new RegAllocator((ASMRoot) asmProgram).Main();
-            new StackManager().visit((ASMRoot) asmProgram);
-            String outputIrFile = "src/test/cache/globalvar.s";
-            var outputAsm = new PrintStream(new FileOutputStream(outputIrFile));
-            outputAsm.println(asmProgram);
-            outputAsm.close();
-            // CombinedAsm.combine((ASMRoot) asmProgram, true);
+            ASTRoot globalVarProgram = worldCollector.GlobalVarCollectRelease(worldScope);
+            worldCollector.inherit((ASTRoot) globalVarProgram, worldScope, true);
+            new SemanticChecker().visit((ASTRoot) globalVarProgram);
+            try {
+                IRNode irProgram = new IRBuilder().visit((ASTRoot) globalVarProgram);
+                new IROptimize().visit((IRRoot) irProgram);
+                ASMNode asmProgram = new InstSelector().visit((IRRoot) irProgram);
+                new RegAllocator((ASMRoot) asmProgram).Main();
+                new StackManager().visit((ASMRoot) asmProgram);
+                String outputIrFile = "src/test/cache/globalvar.s";
+                var outputAsm = new PrintStream(new FileOutputStream(outputIrFile));
+                outputAsm.println(asmProgram);
+                outputAsm.close();
+                // CombinedAsm.combine((ASMRoot) asmProgram, true);
 
+            } catch (BaseError e) {
+                System.err.println("Error during IR/ASM generation for GlobalVar: " +
+                        e.getMessage());
+            }
         } catch (BaseError e) {
-            System.err.println("Error during IR/ASM generation for GlobalVar: " +
+            System.err.println("Semantic error in global : " +
                     e.getMessage());
         }
 
@@ -149,7 +174,7 @@ public class IncrementalCompile {
                     }
                 }
             } catch (BaseError e) {
-                System.err.println("IR error in " + filePath + ": " +
+                System.err.println("Semantic error in " + filePath + ": " +
                         e.getMessage());
             }
         }
@@ -185,5 +210,14 @@ public class IncrementalCompile {
         }
 
         System.out.println(">>> done, final merged asm: " + FINAL_OUT);
+        // 2. 持久化到文件
+        try (ObjectOutputStream oos = new ObjectOutputStream(
+                new BufferedOutputStream(
+                        new FileOutputStream(path)))) {
+            oos.writeObject(worldScope); // 会调用 world.writeExternal(...)
+            System.out.println("WorldScope 已序列化到 " + path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

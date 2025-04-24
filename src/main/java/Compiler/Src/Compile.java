@@ -101,7 +101,7 @@ public class Compile {
                 // process main.mx
                 System.out.println("Further processing: " + mainFilePath);
                 worldCollector.inherit((ASTRoot) astProgram, worldScope, true);
-                worldCollector.GlobalVarCollectRelease((ASTRoot) astProgram, worldScope);
+                // worldCollector.GlobalVarCollectRelease((ASTRoot) astProgram, worldScope);
                 new SemanticChecker().visit((ASTRoot) astProgram);
 
                 try {
