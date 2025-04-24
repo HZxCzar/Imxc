@@ -10,6 +10,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,7 +26,7 @@ public class WorldScope implements BasicType, Externalizable {
     private HashMap<String, FuncInfo> funcs;
     private HashMap<String, ClassInfo> classes;
     private HashMap<String, VarInfo> vars;
-    private HashMap<String, HashSet<ASTVarDef>> Gvars;
+    private HashMap<String, ArrayList<ASTVarDef>> Gvars;
     private HashMap<String, HashSet<String>> file2name;
     private HashSet<String> basefunc;
     private HashSet<String> baseclass;
@@ -34,7 +35,7 @@ public class WorldScope implements BasicType, Externalizable {
         this.funcs = new HashMap<String, FuncInfo>();
         this.classes = new HashMap<String, ClassInfo>();
         this.vars = new HashMap<String, VarInfo>();
-        this.Gvars = new HashMap<String, HashSet<ASTVarDef>>();
+        this.Gvars = new HashMap<String, ArrayList<ASTVarDef>>();
         this.file2name = new HashMap<String, HashSet<String>>();
         basefunc = new HashSet<String>();
         baseclass = new HashSet<String>();
@@ -92,11 +93,11 @@ public class WorldScope implements BasicType, Externalizable {
         }
         // 4) 全局变量定义 Gvars
         out.writeInt(Gvars.size());
-        for (Map.Entry<String, HashSet<ASTVarDef>> e : Gvars.entrySet()) {
+        for (Map.Entry<String, ArrayList<ASTVarDef>> e : Gvars.entrySet()) {
             // 写入文件路径
             out.writeUTF(e.getKey());
             // 写入该文件下全局变量定义的数量
-            HashSet<ASTVarDef> defs = e.getValue();
+            ArrayList<ASTVarDef> defs = e.getValue();
             out.writeInt(defs.size());
             // 写入每个 ASTVarDef 对象
             for (ASTVarDef def : defs) {
@@ -150,7 +151,7 @@ public class WorldScope implements BasicType, Externalizable {
             String path = in.readUTF();
             // 读回该文件下全局变量定义的数量
             int setSize = in.readInt();
-            HashSet<ASTVarDef> defs = new HashSet<>(setSize);
+            ArrayList<ASTVarDef> defs = new ArrayList<>(setSize);
             for (int j = 0; j < setSize; j++) {
                 ASTVarDef def = (ASTVarDef) in.readObject();
                 defs.add(def);

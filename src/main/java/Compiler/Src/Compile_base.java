@@ -44,7 +44,7 @@ public class Compile_base {
             new SymbolCollector().visit((ASTRoot) astProgram);
             new SemanticChecker().visit((ASTRoot) astProgram);
             try {
-                IRNode irProgram = new IRBuilder().visit((ASTRoot) astProgram);
+                IRNode irProgram = new IRBuilder("").visit((ASTRoot) astProgram);
                 new IROptimize().visit((IRRoot) irProgram);
                 var output2 = new PrintStream(new FileOutputStream("src/test/mx/output.ll"));
                 output2.println(irProgram);

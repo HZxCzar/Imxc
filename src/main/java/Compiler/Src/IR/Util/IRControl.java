@@ -26,17 +26,19 @@ public class IRControl {
     protected BaseScope currentScope;
     protected IRCounter counter;
     protected IRFuncDef initFunc;
+    protected final String fileName;
     // public static int InstCounter = 0;
     protected ArrayList<IRStrDef> strDefs;
     protected TreeMap<String, Integer> name2Size;
 
-    public IRControl() {
+    public IRControl(String fileName) {
         this.counter = new IRCounter();
         this.initFunc = new IRFuncDef("main.global.init", new ArrayList<IRVariable>(), GlobalScope.irVoidType,
                 new ArrayList<IRBlock>());
         this.initFunc.getBlockstmts().add(new IRBlock(new IRLabel("entry", 0), 0));
         this.strDefs = new ArrayList<IRStrDef>();
         this.name2Size = new TreeMap<>();
+        this.fileName = fileName;
         name2Size.put("i1", 1);
         name2Size.put("i32", 4);
         name2Size.put("ptr", 4);

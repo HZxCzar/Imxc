@@ -124,7 +124,7 @@ public class IncrementalCompile {
             worldCollector.inherit((ASTRoot) globalVarProgram, worldScope, true);
             new SemanticChecker().visit((ASTRoot) globalVarProgram);
             try {
-                IRNode irProgram = new IRBuilder().visit((ASTRoot) globalVarProgram);
+                IRNode irProgram = new IRBuilder("").visit((ASTRoot) globalVarProgram);
                 new IROptimize().visit((IRRoot) irProgram);
                 ASMNode asmProgram = new InstSelector().visit((IRRoot) irProgram);
                 new RegAllocator((ASMRoot) asmProgram).Main();
@@ -154,7 +154,7 @@ public class IncrementalCompile {
                     new SemanticChecker().visit((ASTRoot) astProgram);
 
                     try {
-                        IRNode irProgram = new IRBuilder().visit((ASTRoot) astProgram);
+                        IRNode irProgram = new IRBuilder(filePath.getFileName().toString()).visit((ASTRoot) astProgram);
                         ((IRRoot) irProgram).Dinit();
                         new IROptimize().visit((IRRoot) irProgram);
                         ASMNode asmProgram = new InstSelector().visit((IRRoot) irProgram);

@@ -1,6 +1,7 @@
 package Compiler.Src.Increment.SymbolNet;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import Compiler.Src.AST.Node.ASTRoot;
@@ -22,7 +23,7 @@ public class WorldCollector {
 
     public WError GlobalVarCollect(ASTRoot astProgram, WorldScope scope, String filePath) throws BaseError {
         HashSet<ASTVarDef> rmvSet = new HashSet<ASTVarDef>();
-        scope.getGvars().put(filePath, new HashSet<ASTVarDef>());
+        scope.getGvars().put(filePath, new ArrayList<ASTVarDef>());
         scope.getFile2name().put(filePath, new HashSet<String>());
         for (ASTDef def : astProgram.getDefNodes()) {
             scope.getFile2name().get(filePath).add(def.findName());
@@ -48,7 +49,7 @@ public class WorldCollector {
 
     public ASTRoot GlobalVarCollectRelease(WorldScope scope) throws BaseError,IOException {
         ASTRoot astProgram = new ASTRoot();
-        for(HashSet<ASTVarDef> defSet : scope.getGvars().values()) {
+        for(ArrayList<ASTVarDef> defSet : scope.getGvars().values()) {
             for(ASTVarDef def : defSet) {
                 astProgram.getDefNodes().add(def);
             }

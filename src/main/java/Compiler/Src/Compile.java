@@ -105,7 +105,7 @@ public class Compile {
                 new SemanticChecker().visit((ASTRoot) astProgram);
 
                 try {
-                    IRNode irProgram = new IRBuilder().visit((ASTRoot) astProgram);
+                    IRNode irProgram = new IRBuilder("main").visit((ASTRoot) astProgram);
                     new IROptimize().visit((IRRoot) irProgram);
                     ASMNode asmProgram = new InstSelector().visit((IRRoot)irProgram);
                     new RegAllocator((ASMRoot) asmProgram).Main();
@@ -138,7 +138,7 @@ public class Compile {
                         new SemanticChecker().visit((ASTRoot) astProgram);
 
                         try {
-                            IRNode irProgram = new IRBuilder().visit((ASTRoot) astProgram);
+                            IRNode irProgram = new IRBuilder(filePath.getFileName().toString()).visit((ASTRoot) astProgram);
                             new IROptimize().visit((IRRoot) irProgram);
                             ASMNode asmProgram = new InstSelector().visit((IRRoot)irProgram);
                             new RegAllocator((ASMRoot) asmProgram).Main();

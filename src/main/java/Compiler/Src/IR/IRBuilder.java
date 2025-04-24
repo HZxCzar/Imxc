@@ -29,6 +29,10 @@ import Compiler.Src.Util.ScopeUtil.*;
 
 public class IRBuilder extends IRControl implements ASTVisitor<IRNode> {
     int loopDepth;
+    public IRBuilder(String fileName) {
+        super(fileName);
+        loopDepth = 0;
+    }
 
     @Override
     public IRNode visit(ASTNode node) throws BaseError {
@@ -295,35 +299,20 @@ public class IRBuilder extends IRControl implements ASTVisitor<IRNode> {
     public IRNode visit(ASTFstring node) throws BaseError {
         enterASTNode(node);
         var instList = new IRStmt();
-        var dest = new IRVariable(GlobalScope.irPtrType, "@str." + (++IRCounter.strCount));
-        // var destAddr = new IRVariable(GlobalScope.irPtrType, "%strAddr." +
-        // (++counter.allocaCount));
+        var dest = new IRVariable(GlobalScope.irPtrType, "@str."+fileName+"." + (++IRCounter.strCount));
         var baseStr = new IRStrDef(dest, "");
         strDefs.add(baseStr);
-        // instList.setDestAddr(destAddr);
-        // var former = new IRVariable(GlobalScope.irPtrType, "@str." +
-        // (++IRCounter.strCount));
         for (int i = 0; i < node.getStrpart().size(); ++i) {
-            var strDest = new IRVariable(GlobalScope.irPtrType, "@str." + (++IRCounter.strCount));
+            var strDest = new IRVariable(GlobalScope.irPtrType, "@str."+fileName+"." + (++IRCounter.strCount));
             var str = new IRStrDef(strDest, node.getStrpart().get(i));
             strDefs.add(str);
-            // var lhsStr = new IRVariable(GlobalScope.irPtrType, "%lhs." +
-            // (++counter.loadCount));
-            // var rhsStr = new IRVariable(GlobalScope.irPtrType, "%rhs." +
-            // (++counter.loadCount));
             var strAdd = new IRVariable(GlobalScope.irPtrType, "%.tmp.FstringRes." + (++counter.loadCount));
-            // instList.addInsts(new IRLoad(lhsStr, dest));
-            // instList.addInsts(new IRLoad(rhsStr, strDest));
             var args1 = new ArrayList<IREntity>();
             args1.add(dest);
             args1.add(strDest);
             instList.addInsts(
                     new IRCall(++InstCounter.InstCounter, strAdd, GlobalScope.irPtrType, "__string.concat", args1));
             dest = strAdd;
-            // var args1_1 = new ArrayList<IREntity>();
-            // args1_1.add(dest);
-            // args1_1.add(strAdd);
-            // instList.addInsts(new IRCall("__string.copy", args1_1));
             if (i != node.getStrpart().size() - 1) {
                 if (node.getExprpart() != null) {
                     var expr = node.getExprpart().get(i);
@@ -878,7 +867,7 @@ public class IRBuilder extends IRControl implements ASTVisitor<IRNode> {
         } else if (node.getAtomType() == ASTAtomExpr.Type.BOOL) {
             instList.setDest(new IRLiteral(GlobalScope.irBoolType, node.getValue()));
         } else if (node.getAtomType() == ASTAtomExpr.Type.STRING) {
-            var dest = new IRVariable(GlobalScope.irPtrType, "@str." + (++IRCounter.strCount));
+            var dest = new IRVariable(GlobalScope.irPtrType, "@str."+fileName+"." + (++IRCounter.strCount));
             var str = new IRStrDef(dest, node.getValue());
             strDefs.add(str);
             instList.setDest(dest);

@@ -17,8 +17,6 @@ import Compiler.Src.IR.Node.Def.IRFuncDef;
 import Compiler.Src.IR.Node.Inst.*;
 import Compiler.Src.IR.Node.Stmt.IRBlock;
 import Compiler.Src.IR.Node.util.IRLabel;
-import Compiler.Src.IR.Type.IRType;
-import Compiler.Src.IR.Util.IRCounter;
 import Compiler.Src.IR.Util.InstCounter;
 import Compiler.Src.Util.Error.OPTError;
 import Compiler.Src.Util.ScopeUtil.GlobalScope;
