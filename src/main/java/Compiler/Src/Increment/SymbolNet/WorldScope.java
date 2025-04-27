@@ -2,6 +2,7 @@ package Compiler.Src.Increment.SymbolNet;
 
 import Compiler.Src.Util.Info.*;
 import Compiler.Src.AST.Node.DefNode.ASTVarDef;
+import Compiler.Src.IR.Node.Def.IRGlobalDef;
 import Compiler.Src.Increment.Util.Error.WError;
 import Compiler.Src.Util.*;
 import Compiler.Src.Util.ScopeUtil.*;
@@ -17,17 +18,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.nio.file.Path;
 
 // @lombok.experimental.SuperBuilder
 @lombok.Getter
 @lombok.Setter
 public class WorldScope implements BasicType, Externalizable {
-    private HashMap<String, FuncInfo> funcs;
-    private HashMap<String, ClassInfo> classes;
-    private HashMap<String, VarInfo> vars;
-    private HashMap<String, ArrayList<ASTVarDef>> Gvars;
+    private HashMap<String, FuncInfo> funcs;// func info
+    private HashMap<String, ClassInfo> classes;// class info
+    private HashMap<String, VarInfo> vars;// var info
+    private HashMap<String, Integer> name2Size;// class name -> size
+    private HashMap<String, ArrayList<ASTVarDef>> Gvars;// global var def
     private HashMap<String, HashSet<String>> file2name;
+    private HashMap<String, HashSet<IRGlobalDef>> file2gcls;// file path -> ir global class name
+    private HashMap<String, HashSet<String>> file2related;// file path -> related file path
     private HashSet<String> basefunc;
     private HashSet<String> baseclass;
 
@@ -35,8 +38,11 @@ public class WorldScope implements BasicType, Externalizable {
         this.funcs = new HashMap<String, FuncInfo>();
         this.classes = new HashMap<String, ClassInfo>();
         this.vars = new HashMap<String, VarInfo>();
+        this.name2Size = new HashMap<String, Integer>();
         this.Gvars = new HashMap<String, ArrayList<ASTVarDef>>();
         this.file2name = new HashMap<String, HashSet<String>>();
+        this.file2gcls = new HashMap<String, HashSet<IRGlobalDef>>();
+        this.file2related = new HashMap<String, HashSet<String>>();
         basefunc = new HashSet<String>();
         baseclass = new HashSet<String>();
         for (FuncInfo func : BaseFuncs) {
@@ -49,16 +55,20 @@ public class WorldScope implements BasicType, Externalizable {
         }
     }
 
-    public void filter(List<Path> toRecompile, List<Path> toSkip) {
+    public void filter(List<String> toRecompile, List<String> toSkip) {
         // 1) 构造一个只包含 toSkip 的路径字符串集合
         Set<String> skipSet = toSkip.stream()
-                .map(Path::toString)
+                .map(path -> path.toString())
                 .collect(Collectors.toSet());
 
         // 2) 直接操作 keySet，删掉那些不在 skipSet 里的
         file2name.keySet().removeIf(pathStr -> !skipSet.contains(pathStr));
         Gvars.keySet().removeIf(pathStr -> !skipSet.contains(pathStr));
-
+        file2gcls.keySet().removeIf(pathStr -> !skipSet.contains(pathStr));
+        // 打印file2name
+        // for (var entry : file2name.entrySet()) {
+        //     System.out.println("file2name: " + entry.getKey() + " -> " + entry.getValue());
+        // }
         Set<String> keepNames = file2name.values()
                 .stream()
                 .flatMap(Set::stream)
@@ -66,6 +76,13 @@ public class WorldScope implements BasicType, Externalizable {
         funcs.keySet().removeIf(funcName -> !keepNames.contains(funcName));
         classes.keySet().removeIf(className -> !keepNames.contains(className));
         vars.keySet().removeIf(varName -> !keepNames.contains(varName));
+        name2Size.keySet().removeIf(name -> {
+            String key = name.startsWith("%class.") ? name.substring(7) : name;
+            return !keepNames.contains(key);
+        });
+        name2Size.put("i1", 1);
+        name2Size.put("i32", 4);
+        name2Size.put("ptr", 4);
         System.out.println("WorldScope.filter: " + file2name.size() + " files, " +
                 funcs.size() + " funcs, " + classes.size() + " classes, " +
                 vars.size() + " vars, " + Gvars.size() + " Gvars");
@@ -91,7 +108,13 @@ public class WorldScope implements BasicType, Externalizable {
             out.writeUTF(e.getKey());
             out.writeObject(e.getValue());
         }
-        // 4) 全局变量定义 Gvars
+        // 4) name2Size
+        out.writeInt(name2Size.size());
+        for (Map.Entry<String, Integer> e : name2Size.entrySet()) {
+            out.writeUTF(e.getKey());
+            out.writeInt(e.getValue());
+        }
+        // 5) 全局变量定义 Gvars
         out.writeInt(Gvars.size());
         for (Map.Entry<String, ArrayList<ASTVarDef>> e : Gvars.entrySet()) {
             // 写入文件路径
@@ -104,13 +127,33 @@ public class WorldScope implements BasicType, Externalizable {
                 out.writeObject(def);
             }
         }
-        // 5) file2name
+        // 6) file2name
         out.writeInt(file2name.size());
         for (Map.Entry<String, HashSet<String>> e : file2name.entrySet()) {
             out.writeUTF(e.getKey());
             HashSet<String> names = e.getValue();
             out.writeInt(names.size());
             for (String name : names) {
+                out.writeUTF(name);
+            }
+        }
+        // 7) file2gcls
+        out.writeInt(file2gcls.size());
+        for (Map.Entry<String, HashSet<IRGlobalDef>> e : file2gcls.entrySet()) {
+            out.writeUTF(e.getKey());
+            HashSet<IRGlobalDef> gcls = e.getValue();
+            out.writeInt(gcls.size());
+            for (IRGlobalDef cls : gcls) {
+                out.writeObject(cls);
+            }
+        }
+        // 8) file2related
+        out.writeInt(file2related.size());
+        for (Map.Entry<String, HashSet<String>> e : file2related.entrySet()) {
+            out.writeUTF(e.getKey());
+            HashSet<String> related = e.getValue();
+            out.writeInt(related.size());
+            for (String name : related) {
                 out.writeUTF(name);
             }
         }
@@ -143,7 +186,15 @@ public class WorldScope implements BasicType, Externalizable {
             VarInfo vinfo = (VarInfo) in.readObject();
             vars.put(name, vinfo);
         }
-        // 4) Gvars
+        // 4) name2Size
+        int msz = in.readInt();
+        this.name2Size = new HashMap<>(msz);
+        for (int i = 0; i < msz; i++) {
+            String name = in.readUTF();
+            int size = in.readInt();
+            name2Size.put(name, size);
+        }
+        // 5) Gvars
         int gsz = in.readInt();
         this.Gvars = new HashMap<>(gsz);
         for (int i = 0; i < gsz; i++) {
@@ -158,7 +209,7 @@ public class WorldScope implements BasicType, Externalizable {
             }
             Gvars.put(path, defs);
         }
-        // 5) file2name
+        // 6) file2name
         int f2nsz = in.readInt();
         this.file2name = new HashMap<>(f2nsz);
         for (int i = 0; i < f2nsz; i++) {
@@ -169,6 +220,31 @@ public class WorldScope implements BasicType, Externalizable {
                 names.add(in.readUTF());
             }
             file2name.put(path, names);
+        }
+        // 7) file2gcls
+        int f2gcsz = in.readInt();
+        this.file2gcls = new HashMap<>(f2gcsz);
+        for (int i = 0; i < f2gcsz; i++) {
+            String path = in.readUTF();
+            int gcsz = in.readInt();
+            HashSet<IRGlobalDef> gcls = new HashSet<>(gcsz);
+            for (int j = 0; j < gcsz; j++) {
+                IRGlobalDef cls = (IRGlobalDef) in.readObject();
+                gcls.add(cls);
+            }
+            file2gcls.put(path, gcls);
+        }
+        // 8) file2related
+        int f2rsz = in.readInt();
+        this.file2related = new HashMap<>(f2rsz);
+        for (int i = 0; i < f2rsz; i++) {
+            String path = in.readUTF();
+            int rsz = in.readInt();
+            HashSet<String> related = new HashSet<>(rsz);
+            for (int j = 0; j < rsz; j++) {
+                related.add(in.readUTF());
+            }
+            file2related.put(path, related);
         }
         // basefunc/baseclass 已经在无参构造器里跑过一次了，无需再读
     }

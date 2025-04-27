@@ -1,6 +1,7 @@
 package Compiler.Src.AST.Node;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import Compiler.Src.AST.ASTVisitor;
 import Compiler.Src.AST.Node.DefNode.ASTDef;
@@ -15,6 +16,7 @@ import Compiler.Src.Util.ScopeUtil.*;
 public class ASTRoot extends ASTNode implements ASTScopedNode {
     public GlobalScope Gscope;
     public ArrayList<ASTDef> DefNodes;
+    public HashMap<String, Integer> name2Size;
     public ASTRoot() {
         super();
         this.DefNodes = new ArrayList<ASTDef>();

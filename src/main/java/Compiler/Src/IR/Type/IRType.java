@@ -1,12 +1,27 @@
 package Compiler.Src.IR.Type;
 
+import java.io.Externalizable;
+
 import Compiler.Src.Util.Info.TypeInfo;
 import Compiler.Src.Util.ScopeUtil.GlobalScope;
 
 @lombok.Getter
 @lombok.Setter
-public class IRType {
+public class IRType implements Externalizable {
   public String typeName;
+
+  public IRType() {
+    this.typeName = null;
+  }
+
+  @Override
+  public void writeExternal(java.io.ObjectOutput out) throws java.io.IOException {
+    out.writeUTF(typeName);
+  }
+  @Override
+  public void readExternal(java.io.ObjectInput in) throws java.io.IOException, ClassNotFoundException {
+    this.typeName = in.readUTF();
+  }
 
   public IRType(String typename) {
     this.typeName = typename;

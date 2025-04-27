@@ -1,5 +1,8 @@
 package Compiler.Src.IR.Entity;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Objects;
 
 import Compiler.Src.IR.IRVisitor;
@@ -9,6 +12,9 @@ import Compiler.Src.Util.Error.BaseError;
 @lombok.Getter
 @lombok.Setter
 public class IRVariable extends IREntity implements Comparable<IRVariable> {
+    public IRVariable() {
+        super();
+    }
     public IRVariable(IRType type, String value) {
         super(type, value);
     }
@@ -16,13 +22,13 @@ public class IRVariable extends IREntity implements Comparable<IRVariable> {
     public boolean isGlobal() {
         return getValue().startsWith("@");
     }
-    public boolean isStr()
-    {
+
+    public boolean isStr() {
         return getValue().startsWith("@str");
     }
 
     public boolean isParameter() {
-        return !getValue().startsWith("%.tmp.") && !getValue().startsWith("@");//!getValue().startsWith("%.tmp.") && 
+        return !getValue().startsWith("%.tmp.") && !getValue().startsWith("@");// !getValue().startsWith("%.tmp.") &&
     }
 
     @Override

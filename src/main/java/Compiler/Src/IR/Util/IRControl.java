@@ -4,6 +4,8 @@ import Compiler.Src.Util.ScopeUtil.BaseScope;
 import Compiler.Src.Util.ScopeUtil.GlobalScope;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.TreeMap;
 
 import Compiler.Src.AST.Node.ASTNode;
@@ -29,7 +31,7 @@ public class IRControl {
     protected final String fileName;
     // public static int InstCounter = 0;
     protected ArrayList<IRStrDef> strDefs;
-    protected TreeMap<String, Integer> name2Size;
+    public HashMap<String, Integer> name2Size;
 
     public IRControl(String fileName) {
         this.counter = new IRCounter();
@@ -37,7 +39,7 @@ public class IRControl {
                 new ArrayList<IRBlock>());
         this.initFunc.getBlockstmts().add(new IRBlock(new IRLabel("entry", 0), 0));
         this.strDefs = new ArrayList<IRStrDef>();
-        this.name2Size = new TreeMap<>();
+        this.name2Size = new HashMap<>();
         this.fileName = fileName;
         name2Size.put("i1", 1);
         name2Size.put("i32", 4);
@@ -212,6 +214,7 @@ public class IRControl {
         if (type.equals(GlobalScope.nullType)) {
             args.add(new IRLiteral(GlobalScope.irIntType, "4"));
         } else {
+            // System.out.println("alloca unit type: " + type.getName());
             args.add(new IRLiteral(GlobalScope.irIntType, name2Size.get(TypeInfo2Name(type)).toString()));
         }
         var allocaCall = new IRCall(++InstCounter.InstCounter, allocaVar, GlobalScope.irPtrType, "_malloc", args);

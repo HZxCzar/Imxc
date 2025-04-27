@@ -4,6 +4,7 @@ import Compiler.Src.Util.Info.*;
 import Compiler.Src.Increment.SymbolNet.WorldScope;
 import Compiler.Src.Util.*;
 
+import java.util.HashSet;
 import java.util.TreeMap;
 
 // @lombok.experimental.SuperBuilder
@@ -12,11 +13,17 @@ import java.util.TreeMap;
 public class GlobalScope extends BaseScope implements BasicType {
     private TreeMap<String, FuncInfo> funcs;
     private TreeMap<String, ClassInfo> classes;
+    public HashSet<String> classNames;
+    public HashSet<String> funcNames;
+    public HashSet<String> varNames;
 
     public GlobalScope() {
         super(null, null);
         this.funcs = new TreeMap<String, FuncInfo>();
         this.classes = new TreeMap<String, ClassInfo>();
+        this.classNames = new HashSet<String>();
+        this.funcNames = new HashSet<String>();
+        this.varNames = new HashSet<String>();
         for(FuncInfo func:BaseFuncs)
         {
             this.funcs.put(func.getName(), func);
@@ -67,10 +74,13 @@ public class GlobalScope extends BaseScope implements BasicType {
     @Override
     public boolean contains(String name) {
         if (vars.containsKey(name)) {
+            varNames.add(name);
             return true;
         } else if (funcs.containsKey(name)) {
+            funcNames.add(name);
             return true;
         } else if (classes.containsKey(name)) {
+            classNames.add(name);
             return true;
         }
         return false;
@@ -80,6 +90,7 @@ public class GlobalScope extends BaseScope implements BasicType {
     public FuncInfo containsFuncs(String name) {
         if(funcs.containsKey(name))
         {
+            funcNames.add(name);
             return funcs.get(name);
         }
         else{
@@ -91,6 +102,8 @@ public class GlobalScope extends BaseScope implements BasicType {
     public ClassInfo containsClasses(String name) {
         if(classes.containsKey(name))
         {
+            // System.out.println("ClassInfo: " + classes.get(name).getName());
+            classNames.add(name);
             return classes.get(name);
         }
         else{
@@ -103,14 +116,18 @@ public class GlobalScope extends BaseScope implements BasicType {
     {
         if(vars.containsKey(name))
         {
+            varNames.add(name);
             return vars.get(name);
         }
         else if(funcs.containsKey(name))
         {
+            funcNames.add(name);
             return funcs.get(name);
         }
         else if(classes.containsKey(name))
         {
+            classNames.add(name);
+            // System.out.println("ClassInfo: " + classes.get(name).getName());
             return classes.get(name);
         }
         else if(this.parent!=null)
