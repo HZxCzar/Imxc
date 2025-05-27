@@ -15,9 +15,7 @@ build: $(JAVA_SRC)
 clean:
 	find bin -name '*.class' -or -name '*.jar' | xargs rm -f
 .PHONY: run
-runbas:
-	java -cp bin:$(ANTLR_JAR):$(LOMBOK_JAR) Compiler.Src.Compile_base
-runmut:
-	java -cp bin:$(ANTLR_JAR):$(LOMBOK_JAR) Compiler.Src.Compile
-runinc:
+run:
 	java -cp bin:$(ANTLR_JAR):$(LOMBOK_JAR) Compiler.Src.IncrementalCompile
+runserver:
+	java -cp bin:$(ANTLR_JAR):$(LOMBOK_JAR) WebServer
